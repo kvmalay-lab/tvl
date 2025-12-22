@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = 'workout_history';
+const STORAGE_KEY = 'tvl_history'; // Updated key
 
 export const useWorkoutHistory = () => {
   const [history, setHistory] = useState([]);
@@ -19,8 +19,14 @@ export const useWorkoutHistory = () => {
 
   // Save a new workout session
   const saveSession = useCallback((session) => {
+    // Generate simple ID if not present
+    const newSession = {
+        id: Date.now().toString(),
+        ...session
+    };
+
     setHistory((prevHistory) => {
-      const newHistory = [session, ...prevHistory];
+      const newHistory = [newSession, ...prevHistory];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
       return newHistory;
     });
@@ -61,14 +67,13 @@ export const useWorkoutHistory = () => {
     };
   }, [history]);
 
-  // Get data for the last 7 days chart
+  // Get data for the last 7 days chart (Dashboard)
   const getLast7DaysData = useCallback(() => {
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateString = date.toLocaleDateString('en-US', { weekday: 'short' }); // e.g., "Mon"
-      // Also need a comparison string for filtering
+      const dateString = date.toLocaleDateString('en-US', { weekday: 'short' });
       const dateKey = date.toISOString().split('T')[0];
 
       last7Days.push({
@@ -90,10 +95,33 @@ export const useWorkoutHistory = () => {
     return last7Days.map(({ name, reps }) => ({ name, reps }));
   }, [history]);
 
+  // Helpers for History Filters
+  const getTodaySessions = useCallback(() => {
+      const today = new Date().toISOString().split('T')[0];
+      return history.filter(s => s.date && s.date.startsWith(today));
+  }, [history]);
+
+  const getWeekSessions = useCallback(() => {
+      const now = new Date();
+      // Simple "last 7 days" or "current week"? Let's do last 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      return history.filter(s => new Date(s.date) >= sevenDaysAgo);
+  }, [history]);
+
+  const getMonthSessions = useCallback(() => {
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      return history.filter(s => new Date(s.date) >= firstDay);
+  }, [history]);
+
   return {
     history,
     saveSession,
     getStats,
     getLast7DaysData,
+    getTodaySessions,
+    getWeekSessions,
+    getMonthSessions
   };
 };
