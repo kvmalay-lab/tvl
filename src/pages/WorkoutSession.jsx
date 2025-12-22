@@ -262,45 +262,55 @@ const WorkoutSession = () => {
       navigate('/');
   };
 
+  // Helper to determine active angle to display
+  const getDisplayAngle = () => {
+      if (exercise === 'squat') return Math.round((leftKneeAngle + rightKneeAngle) / 2);
+      return Math.round((leftAngle + rightAngle) / 2);
+  };
+
+  // Helper for cue color
+  const getCueColor = () => {
+      const cue = coachCue.toLowerCase();
+      if (cue.includes('good') || cue.includes('perfect') || cue.includes('great')) return 'bg-green-600';
+      if (cue.includes('get ready')) return 'bg-gray-700';
+      return 'bg-red-600'; // Corrections
+  };
+
   return (
-    <div className="h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-       {/* Top Bar (Overlay - Fixed to the video container or screen?)
-           Let's keep it screen relative but localized to the content area if possible,
-           or just fixed top for easy access.
-           Current design: absolute top-0.
-       */}
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 gap-6">
 
-       <div className="w-full max-w-4xl mx-auto relative bg-black rounded-xl shadow-2xl overflow-hidden aspect-video">
-           {/* Top Bar (Inside Container) */}
-           <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-start pointer-events-none">
-              <div className="pointer-events-auto flex gap-4">
-                  <select
-                    value={exercise}
-                    onChange={(e) => setExercise(e.target.value)}
-                    className="bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg border border-white/10 outline-none focus:border-indigo-500"
-                  >
-                      <option value="bicep">Bicep Curl</option>
-                      <option value="squat">Squat</option>
-                      <option value="pushup">Push-up</option>
-                      <option value="latpulldown">Lat Pulldown</option>
-                  </select>
+       {/* 1. Header Bar */}
+       <div className="w-full max-w-7xl flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
+          <div className="flex gap-4 items-center">
+              <span className="text-white font-bold text-lg">FitFlex Arena</span>
+              <select
+                value={exercise}
+                onChange={(e) => setExercise(e.target.value)}
+                className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 outline-none focus:border-indigo-500"
+              >
+                  <option value="bicep">Bicep Curl</option>
+                  <option value="squat">Squat</option>
+                  <option value="pushup">Push-up</option>
+                  <option value="latpulldown">Lat Pulldown</option>
+              </select>
 
-                  <button onClick={() => setCalibrating(!calibrating)} className="bg-black/60 backdrop-blur-md text-white p-2 rounded-lg border border-white/10 hover:bg-white/10">
-                      <Settings className="w-5 h-5" />
-                  </button>
-              </div>
+              <button onClick={() => setCalibrating(!calibrating)} className="bg-gray-700 text-white p-2 rounded-lg border border-gray-600 hover:bg-gray-600">
+                  <Settings className="w-5 h-5" />
+              </button>
+          </div>
 
-              <div className="pointer-events-auto">
-                  <button
-                    onClick={endSession}
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
-                  >
-                    <Save className="w-4 h-4" /> End Session
-                  </button>
-              </div>
-           </div>
+          <div>
+              <button
+                onClick={endSession}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" /> End Session
+              </button>
+          </div>
+       </div>
 
-           {/* Webcam & Canvas */}
+       {/* 2. Video Feed (Clean) */}
+       <div className="w-full max-w-7xl relative bg-black rounded-xl shadow-2xl overflow-hidden aspect-video border-4 border-gray-800">
            {!webcamReady && (
               <div className="absolute inset-0 flex items-center justify-center text-white z-0">
                   <div className="text-center">
@@ -321,66 +331,12 @@ const WorkoutSession = () => {
              width={1280}
              height={720}
            />
-
-           {/* HUD Overlay */}
-           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex gap-4">
-               <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center">
-                   <p className="text-xs text-gray-300 uppercase tracking-wider font-bold">Reps</p>
-                   <p className="text-5xl font-black text-white leading-none mt-1">{reps}</p>
-               </div>
-               <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center min-w-[100px]">
-                   <p className="text-xs text-gray-300 uppercase tracking-wider font-bold">Stage</p>
-                   <p className={`text-3xl font-bold leading-none mt-2 ${stage === 'up' ? 'text-blue-400' : 'text-green-400'}`}>
-                       {stage ? stage.toUpperCase() : '-'}
-                   </p>
-               </div>
-           </div>
-
-           {/* Coach Cue */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-             <div key={coachCue} className="animate-fade-in-out text-center">
-                 <h1 className="text-6xl md:text-8xl font-black text-white/90 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] tracking-tight stroke-text">
-                     {coachCue}
-                 </h1>
-             </div>
-           </div>
-
-           {/* Angle Indicators */}
-           <div className="absolute bottom-6 left-6 z-10 space-y-3">
-              <div className="bg-black/50 backdrop-blur-sm p-4 rounded-xl border border-white/10 w-48">
-                  <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-400">Left {exercise === 'squat' ? 'Knee' : 'Elbow'}</span>
-                      <span className="text-xl font-bold text-white">{exercise === 'squat' ? leftKneeAngle : leftAngle}°</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-indigo-500 transition-all duration-300"
-                        style={{ width: `${Math.min(((exercise === 'squat' ? leftKneeAngle : leftAngle) / 180) * 100, 100)}%` }}
-                      />
-                  </div>
-              </div>
-              <div className="bg-black/50 backdrop-blur-sm p-4 rounded-xl border border-white/10 w-48">
-                  <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-400">Right {exercise === 'squat' ? 'Knee' : 'Elbow'}</span>
-                      <span className="text-xl font-bold text-white">{exercise === 'squat' ? rightKneeAngle : rightAngle}°</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-purple-500 transition-all duration-300"
-                        style={{ width: `${Math.min(((exercise === 'squat' ? rightKneeAngle : rightAngle) / 180) * 100, 100)}%` }}
-                      />
-                  </div>
-              </div>
-           </div>
-
-           {/* Calibration */}
+           {/* Calibration Overlay if active */}
            {calibrating && (
-             <div className="absolute bottom-6 right-6 z-20 bg-gray-900/95 backdrop-blur-md p-6 rounded-xl border border-gray-700 w-80 text-sm text-gray-300">
+             <div className="absolute top-4 right-4 z-20 bg-gray-900/95 backdrop-blur-md p-6 rounded-xl border border-gray-700 w-80 text-sm text-gray-300">
                  <h3 className="text-white font-bold mb-3 flex items-center gap-2">
                     <Settings className="w-4 h-4" /> Calibration
                  </h3>
-                 <p className="mb-4 text-xs">Adjust thresholds for your camera angle.</p>
-
                  <div className="space-y-4">
                      <div>
                          <label className="block text-xs mb-1">Elbow Up Threshold (Current: {thresholds.elbowUp}°)</label>
@@ -396,7 +352,34 @@ const WorkoutSession = () => {
            )}
        </div>
 
-       {/* AI Coach Chat Sidebar */}
+       {/* 3. Dashboard Grid (Huge) */}
+       <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-6">
+           {/* Card 1: Rep Counter */}
+           <div className="bg-gray-800 rounded-2xl p-8 flex flex-col items-center justify-center border border-gray-700 shadow-xl h-64">
+               <span className="text-gray-400 font-bold uppercase tracking-wider text-xl mb-2">Total Reps</span>
+               <span className="text-9xl font-black text-white leading-none">{reps}</span>
+           </div>
+
+           {/* Card 2: AI Coach */}
+           <div className={`rounded-2xl p-8 flex flex-col items-center justify-center border border-white/10 shadow-xl h-64 text-center transition-colors duration-500 ${getCueColor()}`}>
+               <span className="text-white/80 font-bold uppercase tracking-wider text-xl mb-2">AI Coach</span>
+               <span className="text-5xl font-bold text-white leading-tight drop-shadow-md">
+                   {coachCue}
+               </span>
+           </div>
+
+           {/* Card 3: Joint Angle */}
+           <div className="bg-gray-800 rounded-2xl p-8 flex flex-col items-center justify-center border border-gray-700 shadow-xl h-64">
+               <span className="text-gray-400 font-bold uppercase tracking-wider text-xl mb-2">
+                   {exercise === 'squat' ? 'Knee Angle' : 'Elbow Angle'}
+               </span>
+               <span className="text-7xl font-mono font-bold text-indigo-400">
+                   {getDisplayAngle()}°
+               </span>
+           </div>
+       </div>
+
+       {/* Chatbot (Floating, accessible) */}
        <AICoachChat exercise={exercise} coachCue={coachCue} />
     </div>
   );
