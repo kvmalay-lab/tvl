@@ -219,11 +219,11 @@ const WorkoutSession = () => {
   useEffect(() => {
     const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
     pose.setOptions({
-      modelComplexity: 1,
+      modelComplexity: 2,
       smoothLandmarks: true,
       enableSegmentation: false,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.7
     });
     pose.onResults(stableOnResults);
     poseRef.current = pose;
@@ -304,13 +304,13 @@ const WorkoutSession = () => {
           )}
           <Webcam
              ref={webcamRef}
-             className="absolute inset-0 w-full h-full object-cover"
+             className="absolute inset-0 w-full h-full object-contain"
              mirrored={false}
              onUserMedia={onUserMedia}
           />
           <canvas
              ref={canvasRef}
-             className="absolute inset-0 w-full h-full object-cover"
+             className="absolute inset-0 w-full h-full object-contain"
              width={1280}
              height={720}
           />
