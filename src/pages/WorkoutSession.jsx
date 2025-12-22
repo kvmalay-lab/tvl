@@ -6,6 +6,7 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { useNavigate } from 'react-router-dom';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { Save, Settings, Camera as CameraIcon } from 'lucide-react';
+import AICoachChat from '../components/AICoachChat';
 
 // --- Helper Functions (Calculating Angles) ---
 function calculateAngle(a, b, c) {
@@ -256,67 +257,73 @@ const WorkoutSession = () => {
           date: new Date().toISOString(),
           exercise: exercise,
           reps: reps,
-          avgConf: 85
+          accuracy: 85 // Using accuracy instead of avgConf as per new schema
       });
       navigate('/');
   };
 
   return (
-    <div className="relative h-screen bg-gray-900 flex flex-col">
-       {/* Top Bar (Overlay) */}
-       <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-start pointer-events-none">
-          <div className="pointer-events-auto flex gap-4">
-              <select
-                value={exercise}
-                onChange={(e) => setExercise(e.target.value)}
-                className="bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg border border-white/10 outline-none focus:border-indigo-500"
-              >
-                  <option value="bicep">Bicep Curl</option>
-                  <option value="squat">Squat</option>
-                  <option value="pushup">Push-up</option>
-                  <option value="latpulldown">Lat Pulldown</option>
-              </select>
+    <div className="h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+       {/* Top Bar (Overlay - Fixed to the video container or screen?)
+           Let's keep it screen relative but localized to the content area if possible,
+           or just fixed top for easy access.
+           Current design: absolute top-0.
+       */}
 
-              <button onClick={() => setCalibrating(!calibrating)} className="bg-black/60 backdrop-blur-md text-white p-2 rounded-lg border border-white/10 hover:bg-white/10">
-                  <Settings className="w-5 h-5" />
-              </button>
-          </div>
+       <div className="w-full max-w-4xl mx-auto relative bg-black rounded-xl shadow-2xl overflow-hidden aspect-video">
+           {/* Top Bar (Inside Container) */}
+           <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-start pointer-events-none">
+              <div className="pointer-events-auto flex gap-4">
+                  <select
+                    value={exercise}
+                    onChange={(e) => setExercise(e.target.value)}
+                    className="bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg border border-white/10 outline-none focus:border-indigo-500"
+                  >
+                      <option value="bicep">Bicep Curl</option>
+                      <option value="squat">Squat</option>
+                      <option value="pushup">Push-up</option>
+                      <option value="latpulldown">Lat Pulldown</option>
+                  </select>
 
-          <div className="pointer-events-auto">
-              <button
-                onClick={endSession}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" /> End Session
-              </button>
-          </div>
-       </div>
+                  <button onClick={() => setCalibrating(!calibrating)} className="bg-black/60 backdrop-blur-md text-white p-2 rounded-lg border border-white/10 hover:bg-white/10">
+                      <Settings className="w-5 h-5" />
+                  </button>
+              </div>
 
-       {/* Webcam & Canvas Layer */}
-       <div className="flex-1 relative overflow-hidden bg-black rounded-xl shadow-2xl">
-          {!webcamReady && (
-              <div className="absolute inset-0 flex items-center justify-center text-white">
+              <div className="pointer-events-auto">
+                  <button
+                    onClick={endSession}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" /> End Session
+                  </button>
+              </div>
+           </div>
+
+           {/* Webcam & Canvas */}
+           {!webcamReady && (
+              <div className="absolute inset-0 flex items-center justify-center text-white z-0">
                   <div className="text-center">
                       <CameraIcon className="w-12 h-12 mx-auto mb-4 animate-pulse" />
                       <p>Initializing Camera...</p>
                   </div>
               </div>
-          )}
-          <Webcam
+           )}
+           <Webcam
              ref={webcamRef}
              className="absolute inset-0 w-full h-full object-contain"
              mirrored={false}
              onUserMedia={onUserMedia}
-          />
-          <canvas
+           />
+           <canvas
              ref={canvasRef}
              className="absolute inset-0 w-full h-full object-contain"
              width={1280}
              height={720}
-          />
+           />
 
-          {/* Glassmorphism HUD Overlay - Top Center */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex gap-4">
+           {/* HUD Overlay */}
+           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex gap-4">
                <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center">
                    <p className="text-xs text-gray-300 uppercase tracking-wider font-bold">Reps</p>
                    <p className="text-5xl font-black text-white leading-none mt-1">{reps}</p>
@@ -327,19 +334,19 @@ const WorkoutSession = () => {
                        {stage ? stage.toUpperCase() : '-'}
                    </p>
                </div>
-          </div>
+           </div>
 
-          {/* Coach Cue Overlay - Center */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+           {/* Coach Cue */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
              <div key={coachCue} className="animate-fade-in-out text-center">
                  <h1 className="text-6xl md:text-8xl font-black text-white/90 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] tracking-tight stroke-text">
                      {coachCue}
                  </h1>
              </div>
-          </div>
+           </div>
 
-          {/* Angle Indicators - Floating Bubbles */}
-          <div className="absolute bottom-6 left-6 z-10 space-y-3">
+           {/* Angle Indicators */}
+           <div className="absolute bottom-6 left-6 z-10 space-y-3">
               <div className="bg-black/50 backdrop-blur-sm p-4 rounded-xl border border-white/10 w-48">
                   <div className="flex justify-between items-center mb-1">
                       <span className="text-xs text-gray-400">Left {exercise === 'squat' ? 'Knee' : 'Elbow'}</span>
@@ -364,10 +371,10 @@ const WorkoutSession = () => {
                       />
                   </div>
               </div>
-          </div>
+           </div>
 
-          {/* Calibration Panel */}
-          {calibrating && (
+           {/* Calibration */}
+           {calibrating && (
              <div className="absolute bottom-6 right-6 z-20 bg-gray-900/95 backdrop-blur-md p-6 rounded-xl border border-gray-700 w-80 text-sm text-gray-300">
                  <h3 className="text-white font-bold mb-3 flex items-center gap-2">
                     <Settings className="w-4 h-4" /> Calibration
@@ -386,8 +393,11 @@ const WorkoutSession = () => {
                      <button onClick={() => setCalibrating(false)} className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg mt-2">Close</button>
                  </div>
              </div>
-          )}
+           )}
        </div>
+
+       {/* AI Coach Chat Sidebar */}
+       <AICoachChat exercise={exercise} coachCue={coachCue} />
     </div>
   );
 };
