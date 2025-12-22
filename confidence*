@@ -1,0 +1,7 @@
+In the History page, the Confidence column represents the Average Pose Detection Confidence for that specific workout session.
+
+It indicates how well the AI (MediaPipe) was able to track your body landmarks (joints) throughout the workout.
+
+High Confidence (Green / >80%): The camera had a clear, unobstructed view of your body, and the tracking was accurate.
+Medium/Low Confidence: Might indicate poor lighting, part of your body was out of frame, or the angle was difficult for the AI to interpret.
+This metric helps you gauge the reliability of the rep count and form tracking for that session.
