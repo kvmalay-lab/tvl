@@ -11,7 +11,7 @@ const Layout = ({ children }) => {
           <div className="p-2 bg-indigo-600 rounded-lg">
             <Dumbbell className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">FitTracker AI</h1>
+          <h1 className="text-xl font-bold tracking-tight">FitFlex</h1>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
@@ -60,7 +60,7 @@ const Layout = ({ children }) => {
 
         <div className="p-4 border-t border-gray-700">
           <div className="text-xs text-gray-500 text-center">
-            &copy; {new Date().getFullYear()} FitTracker AI
+            &copy; {new Date().getFullYear()} FitFlex
           </div>
         </div>
       </aside>
